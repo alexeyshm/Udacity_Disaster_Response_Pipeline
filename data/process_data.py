@@ -22,11 +22,16 @@ def clean_data(df):
         # set each value to be the last character of the string
         categories[column] = categories[column].str.slice(-1)
 
+        #replacing non-binary values
+        categories.loc[(categories[column] != "0") & (categories[column] != "1"), column] = 0
+
         # convert column from string to numeric
         categories[column] = categories[column].astype(int)
 
+
     df = df.drop("categories", axis=1)
     df = pd.concat([df, categories], axis=1)
+
 
     df = df.drop_duplicates()
     return df
@@ -34,7 +39,7 @@ def clean_data(df):
 
 def save_data(df, database_filename):
     engine = create_engine("sqlite:///{}".format(database_filename))
-    df.to_sql('messages_categories', engine, index=False)
+    df.to_sql('messages_categories', engine, index=False, if_exists='replace')
 
 
 def main():
