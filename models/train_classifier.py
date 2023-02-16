@@ -1,14 +1,11 @@
 import sys
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 from nltk.tokenize import word_tokenize
 import re
-from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import nltk
-import numpy as np
 import pickle
 
 from sklearn.pipeline import Pipeline
@@ -18,7 +15,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
-
 nltk.download('punkt')
 nltk.download('wordnet')
 
@@ -44,14 +40,23 @@ def tokenize(text):
 
 
 def build_model():
-    classifier = RandomForestClassifier(criterion='gini', min_samples_split=2, n_estimators=50)
+    classifier = RandomForestClassifier()
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
         ('moc', MultiOutputClassifier(estimator=classifier))
     ])
 
-    return pipeline
+
+    parameters = {
+        'tfidf__use_idf': (True, False),
+        'vect__max_df': (0.5, 1.0),
+        'moc__estimator__n_estimators': [50, 100],
+    }
+
+    cv = GridSearchCV(pipeline, param_grid=parameters)
+
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
